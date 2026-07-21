@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calc Ponto Local</title>
+    <meta
+      name="description"
+      content="Calculadora local para horas trabalhadas, horas faltantes e saída prevista."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero card">
+        <div class="hero-copy">
+          <p class="eyebrow">Ferramenta local para registro de ponto</p>
+          <h1>Calc Ponto</h1>
+          <p class="hero-text">
+            Cole uma linha isolada do dia ou várias linhas copiadas da tabela.
+            A calculadora soma os períodos, mostra o que falta para fechar
+            <strong>08:00</strong>, informa a hora exata em que a meta foi
+            atingida e calcula a saída final quando você preenche a volta do
+            segundo período.
+          </p>
+        </div>
+
+        <aside class="hero-panel">
+          <div class="hero-metric">
+            <span class="hero-metric-label">Meta diária</span>
+            <strong>08:00</strong>
+          </div>
+          <div class="hero-metric">
+            <span class="hero-metric-label">Aceita</span>
+            <strong>1 linha ou várias</strong>
+          </div>
+          <div class="hero-examples">
+            <span class="pill">08:42 13:06</span>
+            <span class="pill">08:42 13:06 14:06</span>
+            <span class="pill">08:42 13:06 14:06 15:03</span>
+          </div>
+        </aside>
+      </header>
+
+      <main class="workspace">
+        <section class="card">
+          <div class="section-heading">
+            <div>
+              <p class="section-label">Entrada</p>
+              <h2>Cole seus registros</h2>
+              <p class="section-text">
+                O parser aceita horários em formato <code>HH:MM</code>,
+                separados por tab, espaço ou texto adicional na linha. Com
+                <code>3</code> marcações, a tabela já mostra a saída alvo para
+                completar <strong>08:00</strong>.
+              </p>
+            </div>
+
+            <div class="actions">
+              <button id="load-example-btn" type="button">Carregar exemplo</button>
+              <button id="copy-results-btn" class="button-muted" type="button">
+                Copiar resultado
+              </button>
+              <button id="clear-btn" class="button-ghost" type="button">
+                Limpar tudo
+              </button>
+            </div>
+          </div>
+
+          <label class="sr-only" for="punch-input">Registros de ponto</label>
+          <textarea
+            id="punch-input"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="08:42    13:06    14:06    15:03&#10;08:42    13:06&#10;21/07/2026    08:19    13:02    14:03    17:27    08:07"
+          ></textarea>
+
+          <div class="input-footnote">
+            <span>
+              Dica: o total da própria tabela, quando vier ao fim da linha e
+              quebrar a sequência cronológica, é ignorado automaticamente.
+            </span>
+            <span id="status-message" aria-live="polite">
+              Aguardando colagem.
+            </span>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <div>
+              <p class="section-label">Manual</p>
+              <h2>Preencha um dia à mão</h2>
+              <p class="section-text">
+                Use este bloco quando não der para copiar da tabela, ou quando
+                você tiver só <code>Entrada 1</code> e <code>Saída 1</code> e
+                quiser descobrir a hora exata de saída ao informar a volta do
+                almoço.
+              </p>
+            </div>
+
+            <div class="actions">
+              <button id="clear-manual-btn" class="button-ghost" type="button">
+                Limpar manual
+              </button>
+            </div>
+          </div>
+
+          <div class="manual-grid">
+            <label class="manual-field" for="manual-entry-1">
+              <span>Entrada 1</span>
+              <input
+                id="manual-entry-1"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="08:42"
+              />
+            </label>
+
+            <label class="manual-field" for="manual-exit-1">
+              <span>Saída 1</span>
+              <input
+                id="manual-exit-1"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="13:06"
+              />
+            </label>
+
+            <label class="manual-field" for="manual-entry-2">
+              <span>Entrada 2</span>
+              <input
+                id="manual-entry-2"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="14:06"
+              />
+            </label>
+
+            <label class="manual-field" for="manual-exit-2">
+              <span>Saída 2</span>
+              <input
+                id="manual-exit-2"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="17:42"
+              />
+            </label>
+          </div>
+
+          <div class="manual-summary-grid" aria-label="Resultado manual">
+            <article class="summary-card summary-card-worked">
+              <p class="summary-label">Trabalhadas</p>
+              <strong id="manual-worked-total">--:--</strong>
+              <span class="summary-help">Soma dos períodos preenchidos</span>
+            </article>
+
+            <article class="summary-card summary-card-missing">
+              <p class="summary-label">Falta / Extra</p>
+              <strong id="manual-balance-total">--:--</strong>
+              <span class="summary-help" id="manual-balance-help">
+                Preencha os horários para calcular o saldo.
+              </span>
+            </article>
+
+            <article class="summary-card summary-card-valid">
+              <p class="summary-label">Meta / Saída alvo</p>
+              <strong id="manual-target-time">--:--</strong>
+              <span class="summary-help" id="manual-target-help">
+                Informe a volta do segundo período para descobrir a saída final.
+              </span>
+            </article>
+
+            <article class="summary-card summary-card-extra">
+              <p class="summary-label">Status do dia</p>
+              <strong id="manual-day-status" class="manual-status-value">
+                Aguardando
+              </strong>
+              <span class="summary-help" id="manual-day-status-help">
+                Preencha ao menos Entrada 1 e Saída 1.
+              </span>
+            </article>
+          </div>
+
+          <div class="manual-detail-wrap">
+            <p
+              id="manual-status-message"
+              class="manual-status-message"
+              aria-live="polite"
+            >
+              Preencha os horários acima para calcular a saída exata.
+            </p>
+          </div>
+        </section>
+
+        <section class="summary-grid" aria-label="Resumo consolidado">
+          <article class="summary-card summary-card-valid">
+            <p class="summary-label">Linhas válidas</p>
+            <strong id="valid-count">0</strong>
+            <span class="summary-help">Dias processados com sucesso</span>
+          </article>
+
+          <article class="summary-card summary-card-worked">
+            <p class="summary-label">Horas trabalhadas</p>
+            <strong id="worked-total">00:00</strong>
+            <span class="summary-help">Soma dos períodos válidos</span>
+          </article>
+
+          <article class="summary-card summary-card-missing">
+            <p class="summary-label">Horas faltantes</p>
+            <strong id="missing-total">00:00</strong>
+            <span class="summary-help">Saldo abaixo da meta</span>
+          </article>
+
+          <article class="summary-card summary-card-extra">
+            <p class="summary-label">Horas extras</p>
+            <strong id="extra-total">00:00</strong>
+            <span class="summary-help">Saldo acima da meta</span>
+          </article>
+
+          <article class="summary-card summary-card-invalid">
+            <p class="summary-label">Linhas inválidas</p>
+            <strong id="invalid-count">0</strong>
+            <span class="summary-help">Não entram no consolidado</span>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <div>
+              <p class="section-label">Saída</p>
+              <h2>Resultado por linha</h2>
+              <p class="section-text" id="results-caption">
+                Cole seus registros para gerar o detalhamento.
+              </p>
+            </div>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <div class="empty-state-content">
+              <p class="empty-title">Nenhuma linha processada ainda</p>
+              <p class="empty-text">
+                Use <kbd>Ctrl</kbd> + <kbd>V</kbd> ou <kbd>Cmd</kbd> +
+                <kbd>V</kbd> no campo acima para calcular imediatamente.
+              </p>
+            </div>
+          </div>
+
+          <div id="results-table-wrap" class="table-wrap" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Linha</th>
+                  <th scope="col">Marcações</th>
+                  <th scope="col">Trabalhadas</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Falta / Extra</th>
+                  <th scope="col">Meta / Saída alvo</th>
+                </tr>
+              </thead>
+              <tbody id="results-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
